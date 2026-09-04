@@ -1,5 +1,5 @@
 
-# RaceDay â€“ Part 1: System Planning and Database
+# RaceDay “ Part 1: System Planning and Database
 
 ## About RaceDay
 
@@ -34,17 +34,17 @@ in the MVC interface in Part 3.
 | File | Description |
 |---|---|
 | `docs/ERD.png` / `docs/ERD.pdf` | Entity Relationship Diagram for the full RaceDay data model (6 entities: Users, UserProfiles, Events, Categories, Enrolments, Results) with primary keys, foreign keys, and cardinality. |
-| `docs/API-Endpoint-Plan.md` | Full planned API surface â€” every endpoint's method, route, description, required role, request body, and expected response â€” covering Auth, User Profile, Events, Categories, Enrolments, and Results. |
+| `docs/API-Endpoint-Plan.md` | Full planned API surface ” every endpoint's method, route, description, required role, request body, and expected response ” covering Auth, User Profile, Events, Categories, Enrolments, and Results. |
 | `docs/RaceDay_Schema.sql` | SQL Server script that creates the full database schema matching the ERD exactly, including all constraints and seed data (2 Organisers, 2 Participants, 3 Events, categories per event, and sample enrolments/results). |
 
 ## Data Model Summary
 
-- **Users** â€” login/auth record for both Organisers and Participants (`Role` column).
-- **UserProfiles** â€” 1:1 extended profile info per user (name, phone, DOB, emergency contact).
-- **Events** â€” created by an Organiser; has a date, location, and description.
-- **Categories** â€” belongs to an Event (e.g. 10km, 21km, 87.7km); has a distance, fee, and capacity.
-- **Enrolments** â€” links a Participant to a Category they've entered.
-- **Results** â€” 1:1 with an Enrolment; the finish time, position, and status captured by the Organiser.
+- **Users** ” login/auth record for both Organisers and Participants (`Role` column).
+- **UserProfiles** ” 1:1 extended profile info per user (name, phone, DOB, emergency contact).
+- **Events** ” created by an Organiser; has a date, location, and description.
+- **Categories** ” belongs to an Event (e.g. 10km, 21km, 87.7km); has a distance, fee, and capacity.
+- **Enrolments** ” links a Participant to a Category they've entered.
+- **Results** ” 1:1 with an Enrolment; the finish time, position, and status captured by the Organiser.
 
 ## Running the SQL Script
 
@@ -57,12 +57,12 @@ in the MVC interface in Part 3.
 ## CI/CD
 
 A GitHub Actions workflow (`.github/workflows/`) validates the repository structure for this
-part â€” confirming the `/docs` folder exists and contains the ERD, endpoint plan, and SQL
+part ” confirming the `/docs` folder exists and contains the ERD, endpoint plan, and SQL
 script.
 
 **Green build screenshot:**
+<img width="1051" height="369" alt="image" src="https://github.com/user-attachments/assets/237780b1-278c-4557-929a-4b6e31c8993f" />
 
-`[INSERT CI/CD green-check screenshot here before submission]`
 
 ## Video Walkthrough
 

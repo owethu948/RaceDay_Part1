@@ -69,5 +69,5 @@ script.
 Unlisted YouTube link (planning documents, ERD decisions, endpoint plan choices, and the SQL
 script run live in SSMS):
 
-`[INSERT UNLISTED YOUTUBE LINK HERE]`
+`[https://youtu.be/75ERfoSonfI?si=inEwMnXOhbUm0QWx]`
 

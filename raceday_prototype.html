@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>RaceDay – Event Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pk:#FF2D78;--pk-h:#E0005F;--pk-l:#FFB6C8;--pk-xl:#FFF0F5;
+  --lv:#E8D5FF;--lv-d:#7C3AED;--lv-t:#F5EEFF;
+  --rd:#FFC2D4;--rg:#FFE4ED;
+  --tx:#2D1B2E;--tx2:#7A5A7E;--tx3:#B89ABC;
+  --wh:#FFFFFF;--bg:#FFF8FA;
+  --gr:#2D7A4F;--gr-l:#F0FFF4;
+  --ff-h:'Playfair Display',serif;--ff-b:'DM Sans',sans-serif;
+  --rad:12px;
+}
+body{font-family:var(--ff-b);background:var(--bg);color:var(--tx);font-size:15px;min-height:100vh}
+
+/* ── SHELL ── */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;min-width:220px;background:var(--wh);border-right:1.5px solid var(--rd);display:flex;flex-direction:column;overflow-y:auto}
+.logo{padding:22px 20px 18px;border-bottom:1px solid var(--rg);display:flex;align-items:center;gap:10px}
+.logo-mark{font-size:26px}
+.logo-txt{font-family:var(--ff-h);font-size:20px;color:var(--pk);line-height:1}
+.logo-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+.nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px}
+.nav-section{font-size:10px;letter-spacing:1px;color:var(--tx3);padding:10px 10px 4px;margin-top:6px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;color:var(--tx2);transition:all 0.15s;font-weight:500;text-decoration:none;border:none;background:none;width:100%;text-align:left}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-item:hover{background:var(--pk-xl);color:var(--pk)}
+.nav-item.active{background:var(--pk);color:#fff}
+.nav-badge{margin-left:auto;background:var(--pk);color:#fff;font-size:10px;border-radius:20px;padding:1px 7px;font-weight:600}
+.nav-item.active .nav-badge{background:#fff;color:var(--pk)}
+.sidebar-footer{padding:16px;border-top:1px solid var(--rg)}
+.user-chip{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;min-width:34px;border-radius:50%;background:var(--pk);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600}
+.user-name{font-size:13px;font-weight:500;color:var(--tx)}
+.user-role{font-size:11px;color:var(--tx3)}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--wh);border-bottom:1.5px solid var(--rd);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.page-title{font-family:var(--ff-h);font-size:20px;color:var(--tx)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--pk-xl);border:1.5px solid var(--rd);border-radius:24px;padding:7px 16px;font-size:13px;color:var(--tx3);transition:border-color .15s;outline:none}
+.search-box:focus-within{border-color:var(--pk)}
+.search-box input{background:none;border:none;outline:none;font-family:var(--ff-b);font-size:13px;color:var(--tx);width:160px}
+.search-box input::placeholder{color:var(--tx3)}
+.notif-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--rd);background:var(--wh);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;transition:border-color .15s}
+.notif-btn:hover{border-color:var(--pk)}
+.notif-dot{width:8px;height:8px;background:var(--pk);border-radius:50%;position:absolute;top:6px;right:6px;border:1.5px solid #fff}
+.notif-btn svg{width:16px;height:16px;stroke:var(--tx2);fill:none;stroke-width:2}
+
+.content{flex:1;padding:28px}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── HERO ── */
+.hero{background:var(--pk);border-radius:16px;padding:26px 28px;color:#fff;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.hero-tag{font-size:11px;opacity:.8;letter-spacing:.5px;margin-bottom:6px;font-weight:500}
+.hero-h{font-family:var(--ff-h);font-size:24px;margin-bottom:6px;line-height:1.25}
+.hero-sub{font-size:13px;opacity:.85;line-height:1.5}
+.hero-btn{background:#fff;color:var(--pk);border:none;border-radius:24px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff-b);white-space:nowrap;transition:background .15s}
+.hero-btn:hover{background:var(--pk-xl)}
+
+/* ── SECTION LABEL ── */
+.section-label{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;font-weight:600}
+
+/* ── GRIDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+
+/* ── STAT CARDS ── */
+.stat-card{background:var(--wh);border:1.5px solid var(--rd);border-radius:var(--rad);padding:16px 18px}
+.stat-val{font-family:var(--ff-h);font-size:28px;color:var(--pk);margin-bottom:3px}
+.stat-lbl{font-size:12px;color:var(--tx3);line-height:1.4}
+
+/* ── EVENT CARDS ── */
+.event-card{background:var(--wh);border:1.5px solid var(--rd);border-radius:14px;padding:18px;cursor:pointer;transition:border-color .15s,transform .15s;display:flex;flex-direction:column}
+.event-card:hover{border-color:var(--pk);transform:translateY(-2px)}
+.ec-img{height:88px;border-radius:10px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0}
+.ec-img.pink{background:linear-gradient(135deg,#FFD6E4,#FFB6C8)}
+.ec-img.lavender{background:linear-gradient(135deg,#E8D5FF,#D6BFFF)}
+.ec-img.rose{background:linear-gradient(135deg,#FFB6C8,#FF8FAB)}
+.ec-name{font-family:var(--ff-h);font-size:16px;color:var(--tx);margin-bottom:5px}
+.ec-meta{font-size:12px;color:var(--tx3);display:flex;align-items:center;gap:5px;margin-bottom:10px}
+.ec-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;flex:1}
+.pill{font-size:11px;border-radius:20px;padding:3px 11px;font-weight:600;white-space:nowrap}
+.pill-pk{background:var(--pk-xl);color:#C4005A}
+.pill-lv{background:var(--lv-t);color:var(--lv-d)}
+.pill-gr{background:var(--gr-l);color:var(--gr)}
+.btn-primary{background:var(--pk);color:#fff;border:none;border-radius:24px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff-b);transition:background .15s;width:100%;text-align:center}
+.btn-primary:hover{background:var(--pk-h)}
+.btn-enrolled{background:var(--lv-t);color:var(--lv-d);border:1.5px solid var(--lv-d);border-radius:24px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff-b);width:100%;text-align:center;transition:all .15s}
+.btn-enrolled:hover{background:var(--pk-xl);border-color:var(--pk);color:var(--pk)}
+.btn-outline{background:#fff;color:var(--pk);border:1.5px solid var(--pk);border-radius:24px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff-b);transition:all .15s}
+.btn-outline:hover{background:var(--pk);color:#fff}
+.btn-sm{padding:7px 16px;font-size:12px}
+.btn-danger{background:#fff;color:#c0392b;border:1.5px solid #f5c6c6;border-radius:24px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ff-b);transition:all .15s}
+.btn-danger:hover{background:#fff5f5;border-color:#e74c3c}
+
+/* ── LIST ROWS ── */
+.list-row{background:var(--wh);border:1.5px solid var(--rd);border-radius:var(--rad);padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.row-icon{width:44px;height:44px;min-width:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--pk-xl)}
+.row-body{flex:1;min-width:0}
+.row-name{font-weight:600;font-size:14px;color:var(--tx)}
+.row-det{font-size:12px;color:var(--tx3);margin-top:3px}
+.row-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+/* ── PILLS / STATUS ── */
+.status-pill{font-size:11px;border-radius:20px;padding:3px 11px;font-weight:600;white-space:nowrap}
+.s-conf{background:var(--pk-xl);color:#C4005A}
+.s-upcoming{background:#E8F8EF;color:#1D6B44}
+.s-past{background:var(--lv-t);color:var(--lv-d)}
+.s-dnf{background:#FFF3E0;color:#B45309}
+.s-dsq{background:#FEE2E2;color:#C0392B}
+.s-fin{background:#E8F8EF;color:#1D6B44}
+
+/* ── RESULTS ── */
+.result-pos{width:40px;height:40px;min-width:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--ff-h);font-size:14px;font-weight:700;color:#fff}
+.pos-gold{background:#F5C518;color:#7A5A00}
+.pos-silver{background:#A8A8A8}
+.pos-bronze{background:#CD7F32}
+.pos-default{background:var(--pk)}
+.pos-other{background:var(--tx3)}
+
+/* ── ORG STATS ROW ── */
+.org-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.org-stat{background:var(--pk-xl);border-radius:10px;padding:10px;text-align:center}
+.org-stat-v{font-family:var(--ff-h);font-size:20px;color:var(--pk)}
+.org-stat-l{font-size:11px;color:var(--tx3);margin-top:1px}
+
+/* ── LEADERBOARD TABLE ── */
+.lb-table{width:100%;border-collapse:collapse;font-size:13px}
+.lb-table th{text-align:left;padding:9px 12px;color:var(--tx3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--rd)}
+.lb-table td{padding:11px 12px;border-bottom:1px solid var(--rg)}
+.lb-table tbody tr:hover{background:var(--pk-xl)}
+.lb-table tbody tr:last-child td{border-bottom:none}
+.lb-wrap{background:var(--wh);border:1.5px solid var(--rd);border-radius:var(--rad);overflow:hidden;margin-bottom:18px}
+
+/* ── FORM ── */
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:6px;display:block}
+.form-input{width:100%;border:1.5px solid var(--rd);border-radius:10px;padding:10px 14px;font-family:var(--ff-b);font-size:14px;color:var(--tx);outline:none;transition:border-color .15s;background:var(--wh)}
+.form-input:focus{border-color:var(--pk)}
+.form-input::placeholder{color:var(--tx3)}
+select.form-input{cursor:pointer}
+textarea.form-input{resize:vertical;min-height:80px}
+
+/* ── WEATHER CARD ── */
+.weather-card{background:var(--wh);border:1.5px solid var(--rd);border-radius:var(--rad);padding:16px 18px;display:flex;align-items:center;gap:16px}
+.weather-icon{font-size:40px}
+.weather-temp{font-family:var(--ff-h);font-size:28px;color:var(--tx)}
+.weather-det{font-size:12px;color:var(--tx3);margin-top:3px}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(45,27,46,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(45,27,46,.2)}
+.modal-head{background:var(--pk);padding:22px 24px;color:#fff}
+.modal-head-title{font-family:var(--ff-h);font-size:20px}
+.modal-head-sub{font-size:13px;opacity:.85;margin-top:4px}
+.modal-body{padding:22px 24px}
+.cat-opt{border:1.5px solid var(--rd);border-radius:12px;padding:12px 16px;cursor:pointer;margin-bottom:10px;transition:border-color .15s,background .15s}
+.cat-opt:hover{border-color:var(--pk);background:var(--pk-xl)}
+.cat-opt.selected{border-color:var(--pk);background:var(--pk-xl)}
+.cat-opt:last-child{margin-bottom:0}
+.cat-opt-name{font-weight:600;font-size:14px;color:var(--tx)}
+.cat-opt-det{font-size:12px;color:var(--tx3);margin-top:3px}
+.modal-foot{padding:0 24px 22px;display:flex;gap:10px}
+.modal-error{color:#C0392B;font-size:12px;margin:-4px 0 10px;display:none}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(0);background:var(--tx);color:#fff;border-radius:24px;padding:12px 22px;font-size:13px;font-weight:500;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;font-family:var(--ff-b);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-8px)}
+.toast.success{background:var(--pk)}
+.toast.info{background:var(--lv-d)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 24px;color:var(--tx3)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-h{font-family:var(--ff-h);font-size:18px;color:var(--tx);margin-bottom:6px}
+.empty-sub{font-size:13px;line-height:1.6}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;background:var(--rg);border-radius:24px;padding:4px;margin-bottom:20px;width:fit-content}
+.tab{padding:7px 18px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);transition:all .15s;border:none;background:none;font-family:var(--ff-b)}
+.tab.active{background:var(--wh);color:var(--pk);box-shadow:0 1px 4px rgba(255,45,120,.15)}
+.tab:hover:not(.active){color:var(--pk)}
+
+/* ── NOTIFICATION PANEL ── */
+.notif-panel{position:absolute;top:56px;right:20px;width:300px;background:#fff;border:1.5px solid var(--rd);border-radius:14px;box-shadow:0 8px 30px rgba(45,27,46,.12);z-index:50;display:none;overflow:hidden}
+.notif-panel.open{display:block}
+.notif-head{padding:14px 16px;border-bottom:1px solid var(--rg);font-weight:600;font-size:14px;color:var(--tx)}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--rg);display:flex;gap:10px;cursor:pointer;transition:background .15s}
+.notif-item:hover{background:var(--pk-xl)}
+.notif-item:last-child{border-bottom:none}
+.notif-dot2{width:8px;height:8px;min-width:8px;border-radius:50%;background:var(--pk);margin-top:5px}
+.notif-txt{font-size:13px;color:var(--tx);line-height:1.4}
+.notif-time{font-size:11px;color:var(--tx3);margin-top:3px}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--rd);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--pk-l)}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">🎀</div>
+      <div>
+        <div class="logo-txt">RaceDay</div>
+        <div class="logo-sub">Race. Celebrate. Repeat.</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-section">Participant</div>
+      <button class="nav-item active" data-page="browse" onclick="navigate('browse',this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Browse Events
+      </button>
+      <button class="nav-item" data-page="enrolments" onclick="navigate('enrolments',this)">
+        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        My Enrolments
+        <span class="nav-badge" id="enrol-badge">3</span>
+      </button>
+      <button class="nav-item" data-page="results" onclick="navigate('results',this)">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        My Results
+      </button>
+      <button class="nav-item" data-page="weather" onclick="navigate('weather',this)">
+        <svg viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+        Race Weather
+      </button>
+      <div class="nav-section">Organiser</div>
+      <button class="nav-item" data-page="dashboard" onclick="navigate('dashboard',this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-page="create-event" onclick="navigate('create-event',this)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Create Event
+      </button>
+      <button class="nav-item" data-page="capture" onclick="navigate('capture',this)">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Capture Results
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="sidebar-avatar">SM</div>
+        <div>
+          <div class="user-name" id="sidebar-name">Sipho Mthembu</div>
+          <div class="user-role" id="sidebar-role">Participant</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar" style="position:relative">
+      <div class="topbar-left">
+        <div class="page-title" id="page-title">Browse Events</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B89ABC" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search events…" id="search-input" oninput="filterEvents()"/>
+        </div>
+        <button class="notif-btn" onclick="toggleNotif()" aria-label="Notifications">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="notif-dot"></span>
+        </button>
+        <div class="avatar" style="cursor:pointer" onclick="navigate('profile',null)">SM</div>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-head">Notifications</div>
+          <div class="notif-item" onclick="closeNotif();navigate('results',document.querySelector('[data-page=results]'))">
+            <div class="notif-dot2"></div>
+            <div>
+              <div class="notif-txt">Your Soweto 21km result has been captured</div>
+              <div class="notif-time">2 hours ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot2"></div>
+            <div>
+              <div class="notif-txt">Comrades Marathon 2027 entries are now open</div>
+              <div class="notif-time">Yesterday</div>
+            </div>
+          </div>
+          <div class="notif-item" style="opacity:.6">
+            <div class="notif-dot2" style="background:var(--tx3)"></div>
+            <div>
+              <div class="notif-txt">Welcome to RaceDay 🎀</div>
+              <div class="notif-time">3 days ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- PAGE: BROWSE EVENTS -->
+      <div class="page active" id="page-browse">
+        <div class="hero">
+          <div>
+            <div class="hero-tag">Spring season · 2026 / 2027</div>
+            <div class="hero-h">Your next adventure<br>starts here 🏃‍♀️</div>
+            <div class="hero-sub" style="margin-top:8px">3 events open near you — find your race and enter today</div>
+          </div>
+          <button class="hero-btn" onclick="filterUpcoming()">Upcoming only</button>
+        </div>
+        <div class="section-label" id="events-label">All events</div>
+        <div class="grid-3" id="events-grid">
+          <!-- filled by JS -->
+        </div>
+        <div class="grid-4">
+          <div class="stat-card"><div class="stat-val">3</div><div class="stat-lbl">Events open near you</div></div>
+          <div class="stat-card"><div class="stat-val" id="enrolled-count">2</div><div class="stat-lbl">Events you've entered</div></div>
+          <div class="stat-card"><div class="stat-val">R1,200</div><div class="stat-lbl">Total entry fees paid</div></div>
+          <div class="stat-card"><div class="stat-val">2</div><div class="stat-lbl">Personal bests recorded</div></div>
+        </div>
+      </div>
+
+      <!-- PAGE: MY ENROLMENTS -->
+      <div class="page" id="page-enrolments">
+        <div class="tabs" id="enrol-tabs">
+          <button class="tab active" onclick="filterEnrolTab('all',this)">All</button>
+          <button class="tab" onclick="filterEnrolTab('upcoming',this)">Upcoming</button>
+          <button class="tab" onclick="filterEnrolTab('past',this)">Past</button>
+        </div>
+        <div id="enrolments-list"><!-- filled by JS --></div>
+      </div>
+
+      <!-- PAGE: MY RESULTS -->
+      <div class="page" id="page-results">
+        <div class="hero" style="margin-bottom:24px">
+          <div>
+            <div class="hero-tag">Performance history</div>
+            <div class="hero-h">You've raced 3 times</div>
+            <div class="hero-sub" style="margin-top:6px">Keep going — Comrades is 9 months away 💪</div>
+          </div>
+          <div style="text-align:right;color:#fff">
+            <div style="font-family:var(--ff-h);font-size:32px">1:45:32</div>
+            <div style="font-size:12px;opacity:.8">Personal best · 21km</div>
+          </div>
+        </div>
+        <div id="results-list"><!-- filled by JS --></div>
+      </div>
+
+      <!-- PAGE: RACE WEATHER -->
+      <div class="page" id="page-weather">
+        <div class="section-label">Race day forecast</div>
+        <div style="margin-bottom:20px">
+          <label class="form-label">Select your event</label>
+          <select class="form-input" style="max-width:320px" onchange="updateWeather(this.value)">
+            <option value="soweto">Soweto Marathon – 9 Nov 2026</option>
+            <option value="comrades">Comrades Marathon – 13 Jun 2027</option>
+            <option value="ctour">Cape Town Cycle Tour – 8 Mar 2027</option>
+          </select>
+        </div>
+        <div class="weather-card" id="weather-card">
+          <div class="weather-icon">🌤️</div>
+          <div>
+            <div style="font-size:14px;color:var(--tx2);font-weight:600;margin-bottom:4px" id="weather-event">Soweto, Johannesburg</div>
+            <div class="weather-temp" id="weather-temp">18°C</div>
+            <div class="weather-det" id="weather-det">Partly cloudy · Wind 12km/h · Humidity 55% · Good running conditions</div>
+          </div>
+        </div>
+        <div style="background:var(--pk-xl);border-radius:var(--rad);padding:16px 18px;margin-top:16px;border:1.5px solid var(--rd)">
+          <div style="font-weight:600;font-size:14px;color:var(--tx);margin-bottom:8px">💡 Race day tips for these conditions</div>
+          <div id="weather-tips" style="font-size:13px;color:var(--tx2);line-height:1.7">
+            Ideal temperatures for running. Start hydrating the night before. Wear light moisture-wicking fabric.
+            Sunscreen recommended — UV index is moderate. A light layer at the start line works well.
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: DASHBOARD -->
+      <div class="page" id="page-dashboard">
+        <div class="grid-4" style="margin-bottom:24px">
+          <div class="stat-card"><div class="stat-val">3</div><div class="stat-lbl">Events managed</div></div>
+          <div class="stat-card"><div class="stat-val">4</div><div class="stat-lbl">Total enrolments</div></div>
+          <div class="stat-card"><div class="stat-val">3</div><div class="stat-lbl">Results captured</div></div>
+          <div class="stat-card"><div class="stat-val">R5,850</div><div class="stat-lbl">Total entry fees</div></div>
+        </div>
+        <div class="section-label">Your events</div>
+        <div id="org-events-list"><!-- filled by JS --></div>
+        <button class="btn-primary" style="width:auto;margin-top:4px" onclick="navigate('create-event',document.querySelector('[data-page=create-event]'))">+ Create new event</button>
+      </div>
+
+      <!-- PAGE: CREATE EVENT -->
+      <div class="page" id="page-create-event">
+        <div style="max-width:560px">
+          <div class="section-label">Event details</div>
+          <div class="form-group">
+            <label class="form-label">Event name</label>
+            <input type="text" class="form-input" id="new-event-name" placeholder="e.g. Pretoria Spring Run 2027"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-input" id="new-event-desc" placeholder="Tell participants what makes this event special…"></textarea>
+          </div>
+          <div class="grid-2" style="margin-bottom:16px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Event date</label>
+              <input type="date" class="form-input" id="new-event-date"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Location</label>
+              <input type="text" class="form-input" id="new-event-loc" placeholder="City, Province"/>
+            </div>
+          </div>
+          <div class="section-label" style="margin-top:24px">Categories</div>
+          <div id="cat-list">
+            <div class="list-row" style="margin-bottom:10px" id="cat-row-0">
+              <div class="row-body">
+                <div class="grid-2" style="margin-bottom:0;gap:10px">
+                  <input type="text" class="form-input" placeholder="Category name e.g. 10km" style="margin-bottom:0"/>
+                  <input type="number" class="form-input" placeholder="Distance (km)" style="margin-bottom:0"/>
+                </div>
+                <div class="grid-2" style="margin-bottom:0;gap:10px;margin-top:8px">
+                  <input type="number" class="form-input" placeholder="Max participants" style="margin-bottom:0"/>
+                  <input type="number" class="form-input" placeholder="Entry fee (R)" style="margin-bottom:0"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-outline btn-sm" style="margin-bottom:24px" onclick="addCatRow()">+ Add category</button>
+          <div style="display:flex;gap:12px">
+            <button class="btn-primary" style="width:auto" onclick="createEvent()">Create event</button>
+            <button class="btn-outline" onclick="navigate('dashboard',document.querySelector('[data-page=dashboard]'))">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: CAPTURE RESULTS -->
+      <div class="page" id="page-capture">
+        <div class="section-label">Select event to capture results</div>
+        <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+          <button class="tab active" id="cap-tab-soweto" onclick="selectCapEvent('soweto',this)">Soweto Marathon</button>
+          <button class="tab" id="cap-tab-comrades" onclick="selectCapEvent('comrades',this)">Comrades Marathon</button>
+        </div>
+        <div id="capture-content"><!-- filled by JS --></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ENROL MODAL -->
+<div class="modal-overlay" id="enrol-modal" onclick="closeEnrolModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-title" id="modal-event-name">Enter event</div>
+      <div class="modal-head-sub" id="modal-event-sub">Choose your category</div>
+    </div>
+    <div class="modal-body">
+      <div id="modal-cat-list"></div>
+      <div class="modal-error" id="modal-error">Please select a category first.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" style="flex:1" onclick="closeEnrolModalDirect()">Cancel</button>
+      <button class="btn-primary" style="flex:1" onclick="confirmEnrol()">Confirm entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL MODAL -->
+<div class="modal-overlay" id="cancel-modal" onclick="closeCancelModal(event)">
+  <div class="modal">
+    <div class="modal-head" style="background:var(--tx)">
+      <div class="modal-head-title">Cancel enrolment?</div>
+      <div class="modal-head-sub" id="cancel-modal-sub">This action cannot be undone.</div>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--tx2);line-height:1.6">Your spot will be released and your entry fee may not be refundable. Are you sure you want to cancel?</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" style="flex:1" onclick="closeCancelModalDirect()">Keep enrolment</button>
+      <button class="btn-danger" style="flex:1;padding:10px" onclick="confirmCancel()">Yes, cancel it</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const EVENTS = {
+  comrades: {
+    id:'comrades', name:'Comrades Marathon', emoji:'🏅', imgClass:'pink',
+    date:'13 Jun 2027', loc:'Pietermaritzburg, KwaZulu-Natal',
+    desc:'Iconic ultra-marathon between Pietermaritzburg and Durban.',
+    cats:[{id:'c1',name:'Down Run 87.7km',dist:87.7,fee:950,max:20000}]
+  },
+  soweto: {
+    id:'soweto', name:'Soweto Marathon', emoji:'🌆', imgClass:'lavender',
+    date:'9 Nov 2026', loc:'Soweto, Johannesburg',
+    desc:'Community road race through the streets of Soweto.',
+    cats:[{id:'c2',name:'10km Fun Run',dist:10,fee:150,max:2000},{id:'c3',name:'21km Half Marathon',dist:21.1,fee:250,max:3000}]
+  },
+  ctour: {
+    id:'ctour', name:'Cape Town Cycle Tour', emoji:'🚴‍♀️', imgClass:'rose',
+    date:'8 Mar 2027', loc:'Cape Town, Western Cape',
+    desc:'Scenic cycling event around the Cape Peninsula.',
+    cats:[{id:'c4',name:'109km Full Tour',dist:109,fee:650,max:15000},{id:'c5',name:'56km Half Tour',dist:56,fee:450,max:8000}]
+  }
+};
+
+const RESULTS_DATA = [
+  {event:'Soweto Marathon 2025',cat:'21km Half Marathon',date:'9 Nov 2025',time:'1:45:32',pos:214,status:'Finished'},
+  {event:'Cape Town Cycle Tour 2026',cat:'56km Half Tour',date:'8 Mar 2026',time:'3:12:08',pos:501,status:'Finished'},
+  {event:'Cape Town Cycle Tour 2026',cat:'109km Full Tour',date:'8 Mar 2026',time:'—',pos:null,status:'DNF'},
+];
+
+// enrolled: map of eventId -> categoryName
+let enrolled = {soweto:'21km Half Marathon'};
+let pendingCancel = null;
+let pendingEnrolEvent = null;
+let selectedCat = null;
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+const PAGE_TITLES = {
+  browse:'Browse Events', enrolments:'My Enrolments', results:'My Results',
+  weather:'Race Weather', dashboard:'Organiser Dashboard',
+  'create-event':'Create Event', capture:'Capture Results'
+};
+
+function navigate(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[page] || page;
+  closeNotif();
+  if (page === 'browse') renderEvents();
+  if (page === 'enrolments') renderEnrolments('all');
+  if (page === 'results') renderResults();
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'capture') renderCapture('soweto');
+}
+
+// ══════════════════════════════════════════
+// RENDER: EVENTS GRID
+// ══════════════════════════════════════════
+let showUpcomingOnly = false;
+
+function renderEvents(filter) {
+  const grid = document.getElementById('events-grid');
+  const label = document.getElementById('events-label');
+  const q = (document.getElementById('search-input').value || '').toLowerCase();
+  let items = Object.values(EVENTS).filter(e =>
+    (!q || e.name.toLowerCase().includes(q) || e.loc.toLowerCase().includes(q))
+  );
+  if (showUpcomingOnly) items = items.filter(e => !e.date.includes('2025'));
+  label.textContent = q ? `Search results for "${document.getElementById('search-input').value}"` : (showUpcomingOnly ? 'Upcoming events' : 'All events');
+  if (!items.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-h">No events found</div><div class="empty-sub">Try a different search term</div></div></div>`;
+    return;
+  }
+  grid.innerHTML = items.map(e => {
+    const isEnrolled = !!enrolled[e.id];
+    const catPills = e.cats.map(c => `<span class="pill ${e.id==='ctour'?'pill-lv':'pill-pk'}">${c.dist}km</span>`).join('');
+    const btn = isEnrolled
+      ? `<button class="btn-enrolled" onclick="showEnrolledInfo(event,'${e.id}')">Enrolled ✓ — ${enrolled[e.id]}</button>`
+      : `<button class="btn-primary" onclick="openEnrolModal(event,'${e.id}')">Enter event</button>`;
+    return `<div class="event-card" onclick="openEnrolModal(event,'${e.id}')">
+      <div class="ec-img ${e.imgClass}">${e.emoji}</div>
+      <div class="ec-name">${e.name}</div>
+      <div class="ec-meta">📍 ${e.loc} · ${e.date}</div>
+      <div class="ec-cats">${catPills}</div>
+      ${btn}
+    </div>`;
+  }).join('');
+  document.getElementById('enrolled-count').textContent = Object.keys(enrolled).length;
+}
+
+function filterEvents() { renderEvents(); }
+function filterUpcoming() {
+  showUpcomingOnly = !showUpcomingOnly;
+  const btn = document.querySelector('.hero-btn');
+  btn.textContent = showUpcomingOnly ? 'Show all events' : 'Upcoming only';
+  renderEvents();
+}
+
+// ══════════════════════════════════════════
+// ENROL MODAL
+// ══════════════════════════════════════════
+function openEnrolModal(e, eventId) {
+  if (e) e.stopPropagation();
+  if (enrolled[eventId]) { showEnrolledInfo(null, eventId); return; }
+  const ev = EVENTS[eventId];
+  pendingEnrolEvent = eventId;
+  selectedCat = null;
+  document.getElementById('modal-event-name').textContent = ev.name;
+  document.getElementById('modal-event-sub').textContent = ev.desc;
+  document.getElementById('modal-error').style.display = 'none';
+  const list = document.getElementById('modal-cat-list');
+  list.innerHTML = ev.cats.map((c,i) => `
+    <div class="cat-opt" onclick="selectModalCat(this,'${c.name}',${i})">
+      <div class="cat-opt-name">${c.name}</div>
+      <div class="cat-opt-det">R${c.fee} · Max ${c.max.toLocaleString()} participants</div>
+    </div>`).join('');
+  document.getElementById('enrol-modal').classList.add('open');
+}
+
+function selectModalCat(el, name) {
+  document.querySelectorAll('.cat-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCat = name;
+  document.getElementById('modal-error').style.display = 'none';
+}
+
+function closeEnrolModal(e) { if (e.target === document.getElementById('enrol-modal')) closeEnrolModalDirect(); }
+function closeEnrolModalDirect() { document.getElementById('enrol-modal').classList.remove('open'); }
+
+function confirmEnrol() {
+  if (!selectedCat) {
+    document.getElementById('modal-error').style.display = 'block';
+    return;
+  }
+  enrolled[pendingEnrolEvent] = selectedCat;
+  closeEnrolModalDirect();
+  renderEvents();
+  updateBadge();
+  toast(`Enrolled in ${selectedCat} 🎀`, 'success');
+}
+
+function showEnrolledInfo(e, eventId) {
+  if (e) e.stopPropagation();
+  toast(`You're enrolled: ${EVENTS[eventId].name} — ${enrolled[eventId]}`, 'info');
+}
+
+// ══════════════════════════════════════════
+// RENDER: ENROLMENTS
+// ══════════════════════════════════════════
+function filterEnrolTab(tab, btn) {
+  document.querySelectorAll('#enrol-tabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderEnrolments(tab);
+}
+
+function renderEnrolments(filter) {
+  const list = document.getElementById('enrolments-list');
+  // active enrolments from enrolled map
+  const active = Object.entries(enrolled).map(([id, cat]) => ({
+    id, cat, event: EVENTS[id], status: 'upcoming', isActive: true
+  }));
+  // past enrolments (static)
+  const past = [
+    {id:'soweto-past', cat:'21km Half Marathon', event:{name:'Soweto Marathon 2025', emoji:'🌆', date:'9 Nov 2025'}, status:'past', isActive: false},
+  ];
+  let items = [...active, ...past];
+  if (filter === 'upcoming') items = items.filter(i => i.isActive);
+  if (filter === 'past') items = items.filter(i => !i.isActive);
+
+  if (!items.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-h">No enrolments here</div><div class="empty-sub">Enter an event from the Browse tab to get started.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(i => {
+    const ev = i.event;
+    const statusLabel = i.isActive ? 'Confirmed' : 'Finished';
+    const statusClass = i.isActive ? 's-conf' : 's-past';
+    const cancelBtn = i.isActive
+      ? `<button class="btn-danger btn-sm" onclick="openCancelModal('${i.id}','${i.cat}','${ev.name}')">Cancel</button>`
+      : '';
+    return `<div class="list-row">
+      <div class="row-icon">${ev.emoji}</div>
+      <div class="row-body">
+        <div class="row-name">${ev.name}</div>
+        <div class="row-det">${i.cat} · ${ev.date || ev.loc || ''}</div>
+      </div>
+      <div class="row-actions">
+        <span class="status-pill ${statusClass}">${statusLabel}</span>
+        ${cancelBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// CANCEL MODAL
+// ══════════════════════════════════════════
+function openCancelModal(eventId, cat, name) {
+  pendingCancel = eventId;
+  document.getElementById('cancel-modal-sub').textContent = `${name} — ${cat}`;
+  document.getElementById('cancel-modal').classList.add('open');
+}
+function closeCancelModal(e) { if (e.target === document.getElementById('cancel-modal')) closeCancelModalDirect(); }
+function closeCancelModalDirect() { document.getElementById('cancel-modal').classList.remove('open'); pendingCancel = null; }
+function confirmCancel() {
+  if (pendingCancel && enrolled[pendingCancel]) {
+    const name = EVENTS[pendingCancel]?.name || 'event';
+    delete enrolled[pendingCancel];
+    closeCancelModalDirect();
+    renderEnrolments('all');
+    renderEvents();
+    updateBadge();
+    toast(`Enrolment cancelled — ${name}`, 'info');
+  }
+}
+
+// ══════════════════════════════════════════
+// RENDER: RESULTS
+// ══════════════════════════════════════════
+function renderResults() {
+  const list = document.getElementById('results-list');
+  list.innerHTML = RESULTS_DATA.map((r, i) => {
+    const posClass = i === 0 ? 'pos-silver' : i === 1 ? 'pos-default' : 'pos-other';
+    const posLabel = r.pos || '—';
+    const stClass = r.status === 'Finished' ? 's-fin' : r.status === 'DNF' ? 's-dnf' : 's-dsq';
+    return `<div class="list-row">
+      <div class="result-pos ${posClass}">${posLabel}</div>
+      <div class="row-body">
+        <div class="row-name">${r.event}</div>
+        <div class="row-det">${r.cat} · ${r.date}</div>
+      </div>
+      <div class="row-actions" style="text-align:right">
+        <div>
+          <div style="font-family:var(--ff-h);font-size:18px;color:var(--pk)">${r.time}</div>
+          <span class="status-pill ${stClass}" style="margin-top:4px;display:inline-block">${r.status}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// WEATHER
+// ══════════════════════════════════════════
+const WEATHER = {
+  soweto:  {loc:'Soweto, Johannesburg',   icon:'🌤️',  temp:'18°C', det:'Partly cloudy · Wind 12km/h · Humidity 55%', tips:'Ideal temperatures for running. Start hydrating the night before. Wear light, moisture-wicking fabric. Sunscreen recommended — UV index is moderate.'},
+  comrades:{loc:'Pietermaritzburg, KZN',  icon:'☁️',  temp:'14°C', det:'Overcast · Wind 8km/h · Humidity 72% · Cool start',  tips:'Cooler conditions — perfect for a long ultra. Layer up at the start and plan to shed clothing en route. Carry a light rain jacket just in case.'},
+  ctour:   {loc:'Cape Town, Western Cape',icon:'🌬️', temp:'22°C', det:'Windy · Wind 28km/h · Humidity 48% · Sunny', tips:'Strong Cape Doctor winds expected. Use a low-profile position on the bike. Extra hydration needed. SPF 50+ sunscreen is a must — UV is high.'},
+};
+function updateWeather(val) {
+  const w = WEATHER[val];
+  document.getElementById('weather-event').textContent = w.loc;
+  document.getElementById('weather-temp').textContent = w.temp;
+  document.getElementById('weather-det').textContent = w.det;
+  document.getElementById('weather-tips').textContent = w.tips;
+  document.querySelector('.weather-icon').textContent = w.icon;
+}
+
+// ══════════════════════════════════════════
+// ORGANISER DASHBOARD
+// ══════════════════════════════════════════
+function renderDashboard() {
+  const list = document.getElementById('org-events-list');
+  list.innerHTML = Object.values(EVENTS).map(e => {
+    const enrolCount = e.cats.reduce((s,c) => s + 1, 0);
+    return `<div class="list-row" style="flex-direction:column;align-items:stretch;gap:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="row-icon">${e.emoji}</div>
+        <div class="row-body">
+          <div class="row-name">${e.name}</div>
+          <div class="row-det">📍 ${e.loc} · 📅 ${e.date}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-outline btn-sm" onclick="toast('Edit coming in Part 2!','info')">Edit</button>
+          <button class="btn-primary btn-sm" onclick="navigate('capture',document.querySelector('[data-page=capture]'))">Capture results</button>
+        </div>
+      </div>
+      <div class="org-stat-row">
+        <div class="org-stat"><div class="org-stat-v">${enrolCount + 1}</div><div class="org-stat-l">Enrolments</div></div>
+        <div class="org-stat"><div class="org-stat-v">${e.cats.length}</div><div class="org-stat-l">Categories</div></div>
+        <div class="org-stat"><div class="org-stat-v">${e.id === 'comrades' ? 0 : e.cats.length}</div><div class="org-stat-l">Results in</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// CREATE EVENT
+// ══════════════════════════════════════════
+let catCount = 1;
+function addCatRow() {
+  const div = document.createElement('div');
+  div.className = 'list-row';
+  div.style.marginBottom = '10px';
+  div.innerHTML = `<div class="row-body">
+    <div class="grid-2" style="margin-bottom:0;gap:10px">
+      <input type="text" class="form-input" placeholder="Category name e.g. 5km"/>
+      <input type="number" class="form-input" placeholder="Distance (km)"/>
+    </div>
+    <div class="grid-2" style="margin-bottom:0;gap:10px;margin-top:8px">
+      <input type="number" class="form-input" placeholder="Max participants"/>
+      <input type="number" class="form-input" placeholder="Entry fee (R)"/>
+    </div>
+  </div>
+  <button class="btn-danger btn-sm" onclick="this.closest('.list-row').remove()">Remove</button>`;
+  document.getElementById('cat-list').appendChild(div);
+  catCount++;
+}
+function createEvent() {
+  const name = document.getElementById('new-event-name').value.trim();
+  const date = document.getElementById('new-event-date').value;
+  const loc  = document.getElementById('new-event-loc').value.trim();
+  if (!name || !date || !loc) { toast('Please fill in event name, date, and location.', 'info'); return; }
+  toast(`Event "${name}" created! 🎉`, 'success');
+  document.getElementById('new-event-name').value = '';
+  document.getElementById('new-event-date').value = '';
+  document.getElementById('new-event-loc').value = '';
+  document.getElementById('new-event-desc').value = '';
+  navigate('dashboard', document.querySelector('[data-page=dashboard]'));
+}
+
+// ══════════════════════════════════════════
+// CAPTURE RESULTS
+// ══════════════════════════════════════════
+let captureResults = {};
+function selectCapEvent(id, btn) {
+  document.querySelectorAll('#page-capture .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderCapture(id);
+}
+function renderCapture(eventId) {
+  const ev = EVENTS[eventId];
+  const participants = [
+    {name:'Sipho Mthembu',    cat: ev.cats[ev.cats.length-1].name, id:'p1'},
+    {name:'Anke van der Merwe',cat: ev.cats[0].name,              id:'p2'},
+  ];
+  const rows = participants.map(p => {
+    const saved = captureResults[eventId+p.id];
+    return `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--rg)">${p.name}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--rg)">${p.cat}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--rg)"><input type="text" class="form-input" placeholder="HH:MM:SS" id="time-${eventId}-${p.id}" value="${saved?.time||''}" style="padding:6px 10px;font-size:13px"/></td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--rg)"><input type="number" class="form-input" placeholder="Position" id="pos-${eventId}-${p.id}" value="${saved?.pos||''}" style="padding:6px 10px;font-size:13px;width:90px"/></td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--rg)">
+        <select class="form-input" id="status-${eventId}-${p.id}" style="padding:6px 10px;font-size:13px;width:110px">
+          <option ${(saved?.status||'Finished')==='Finished'?'selected':''}>Finished</option>
+          <option ${saved?.status==='DNF'?'selected':''}>DNF</option>
+          <option ${saved?.status==='DSQ'?'selected':''}>DSQ</option>
+        </select>
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--rg)">
+        <button class="btn-primary btn-sm" onclick="saveResult('${eventId}','${p.id}','${p.name}')">Save</button>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('capture-content').innerHTML = `
+    <div class="lb-wrap">
+      <table class="lb-table">
+        <thead><tr>
+          <th>Participant</th><th>Category</th><th>Finish time</th><th>Position</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+function saveResult(eventId, pid, name) {
+  const time = document.getElementById(`time-${eventId}-${pid}`).value.trim();
+  const pos  = document.getElementById(`pos-${eventId}-${pid}`).value.trim();
+  const status = document.getElementById(`status-${eventId}-${pid}`).value;
+  if (!time && status === 'Finished') { toast('Enter a finish time or set status to DNF/DSQ', 'info'); return; }
+  captureResults[eventId+pid] = {time, pos, status};
+  toast(`Result saved for ${name} ✓`, 'success');
+}
+
+// ══════════════════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════════════════
+function toggleNotif() { document.getElementById('notif-panel').classList.toggle('open'); }
+function closeNotif()  { document.getElementById('notif-panel').classList.remove('open'); }
+
+// ══════════════════════════════════════════
+// BADGE
+// ══════════════════════════════════════════
+function updateBadge() {
+  const n = Object.keys(enrolled).length + 1; // +1 for static past
+  document.getElementById('enrol-badge').textContent = n;
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+let toastTimer;
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type || 'success');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════
+// CLOSE PANELS ON OUTSIDE CLICK
+// ══════════════════════════════════════════
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notif-panel');
+  const btn = e.target.closest('.notif-btn');
+  if (!btn && !panel.contains(e.target)) closeNotif();
+});
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+renderEvents();
+</script>
+</body>
+</html>
